@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<otobo_package version="1.0">
+    <Name>DfirCore</Name>
+    <Version>0.0.0</Version>
+    <Framework>11.0.x</Framework>
+    <Vendor>Rother OSS GmbH</Vendor>
+    <URL>https://otobo.io/</URL>
+    <License>GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007</License>
+    <Description Lang="en">Provides the Generic Agent Job Management feature with the ability to use field tags</Description>
+    <Filelist>
+        <File Permission="660" Location="Custom/Kernel/Output/HTML/Templates/Standard/AdminGenericAgent.tt" />
+        <File Permission="660" Location="Custom/Kernel/System/GenericAgent.pm" />
+    </Filelist>
+</otobo_package>
+
