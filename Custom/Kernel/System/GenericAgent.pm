@@ -235,7 +235,7 @@ sub JobRun {
             if ( $Key =~ /^New/ ) {
                 my $NewKey = $Key;
                 $NewKey =~ s/^New//;
-                $Job{New}{$NewKey} = $DBJobRaw{$Key};
+                $Job{New}->{$NewKey} = $DBJobRaw{$Key};
             }
             else {
 
@@ -247,7 +247,7 @@ sub JobRun {
 
             # convert dynamic fields
             if ( $Key =~ m{ \A DynamicField_ }xms ) {
-                $Job{New}{$Key} = $DBJobRaw{$Key};
+                $Job{New}->{$Key} = $DBJobRaw{$Key};
             }
             elsif ( $Key =~ m{ \A Search_DynamicField_ }xms ) {
                 $DynamicFieldSearchTemplate{$Key} = $DBJobRaw{$Key};
@@ -257,8 +257,8 @@ sub JobRun {
         # Pass module parameters directly to the module in %Param,
         #   but don't overwrite existing keys
         for my $Counter ( 1 .. 6 ) {
-            if ( $Job{New}{"ParamKey$Counter"} ) {
-                $Job{New}{ $Job{New}{"ParamKey$Counter"} } //= $Job{New}{"ParamValue$Counter"};
+            if ( $Job{New}->{"ParamKey$Counter"} ) {
+                $Job{New}->{ $Job{New}->{"ParamKey$Counter"} } //= $Job{New}->{"ParamValue$Counter"};
             }
         }
 
@@ -601,7 +601,7 @@ sub JobGet {
 
     my %Data;
     while ( my @Row = $DBObject->FetchrowArray() ) {
-        if ( $Self->{Map}{ $Row[0] } && $Self->{Map}{ $Row[0] } eq 'ARRAY' ) {
+        if ( $Self->{Map}->{ $Row[0] } && $Self->{Map}->{ $Row[0] } eq 'ARRAY' ) {
             push @{ $Data{ $Row[0] } }, $Row[1];
         }
         else {
@@ -789,8 +789,8 @@ sub JobAdd {
 
     # insert data into db
     for my $Key ( sort keys %{ $Param{Data} } ) {
-        if ( ref $Param{Data}{$Key} eq 'ARRAY' ) {
-            for my $Item ( @{ $Param{Data}{$Key} } ) {
+        if ( ref $Param{Data}->{$Key} eq 'ARRAY' ) {
+            for my $Item ( @{ $Param{Data}->{$Key} } ) {
                 if ( defined $Item ) {
                     $DBObject->Do(
                         SQL => 'INSERT INTO generic_agent_jobs '
@@ -801,11 +801,11 @@ sub JobAdd {
             }
         }
         else {
-            if ( defined $Param{Data}{$Key} ) {
+            if ( defined $Param{Data}->{$Key} ) {
                 $DBObject->Do(
                     SQL => 'INSERT INTO generic_agent_jobs '
                         . '(job_name, job_key, job_value) VALUES (?, ?, ?)',
-                    Bind => [ \$Param{Name}, \$Key, \$Param{Data}{$Key} ],
+                    Bind => [ \$Param{Name}, \$Key, \$Param{Data}->{$Key} ],
                 );
             }
         }
@@ -950,28 +950,28 @@ sub _JobRunTicket {
     my $Ticket = "($Param{TicketNumber}/$Param{TicketID})";
 
     # disable sending emails
-    local $TicketObject->{SendNoNotification} = $Param{Config}{New}{SendNoNotification} ? 1 : 0;
+    local $TicketObject->{SendNoNotification} = $Param{Config}->{New}->{SendNoNotification} ? 1 : 0;
 
     # move ticket
-    if ( $Param{Config}{New}{Queue} ) {
+    if ( $Param{Config}->{New}->{Queue} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Move Ticket $Ticket to Queue '$Param{Config}->{New}->{Queue}'\n";
         }
         $TicketObject->TicketQueueSet(
             QueueID => $Kernel::OM->Get('Kernel::System::Queue')->QueueLookup(
-                Queue => $Param{Config}{New}{Queue},
+                Queue => $Param{Config}->{New}->{Queue},
                 Cache => 1,
             ),
             UserID   => $Param{UserID},
             TicketID => $Param{TicketID},
         );
     }
-    if ( $Param{Config}{New}{QueueID} ) {
+    if ( $Param{Config}->{New}->{QueueID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Move Ticket $Ticket to QueueID '$Param{Config}->{New}->{QueueID}'\n";
         }
         $TicketObject->TicketQueueSet(
-            QueueID  => $Param{Config}{New}{QueueID},
+            QueueID  => $Param{Config}->{New}->{QueueID},
             UserID   => $Param{UserID},
             TicketID => $Param{TicketID},
         );
@@ -980,7 +980,7 @@ sub _JobRunTicket {
     my $ContentType = 'text/plain';
 
     # add note if wanted
-    if ( $Param{Config}{New}{Note}{Body} || $Param{Config}{New}{NoteBody} ) {
+    if ( $Param{Config}->{New}->{Note}->{Body} || $Param{Config}->{New}->{NoteBody} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Add note to Ticket $Ticket\n";
         }
@@ -990,27 +990,27 @@ sub _JobRunTicket {
             DynamicFields => 1,
         );
 
-        $Param{Config}{New}{NoteBody} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
+        $Param{Config}->{New}->{NoteBody} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
             TicketData => \%Ticket,
-            Text       => $Param{Config}{New}{NoteBody},
+            Text       => $Param{Config}->{New}->{NoteBody},
             RichText   => 0,
         );
 
-        $Param{Config}{New}{NoteSubject} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
+        $Param{Config}->{New}->{NoteSubject} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
             TicketData => \%Ticket,
-            Text       => $Param{Config}{New}{NoteSubject},
+            Text       => $Param{Config}->{New}->{NoteSubject},
             RichText   => 0,
         );
 
-        $Param{Config}{New}{NoteFrom} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
+        $Param{Config}->{New}->{NoteFrom} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
             TicketData => \%Ticket,
-            Text       => $Param{Config}{New}{NoteFrom},
+            Text       => $Param{Config}->{New}->{NoteFrom},
             RichText   => 0,
         );
 
@@ -1024,8 +1024,8 @@ sub _JobRunTicket {
             }
 
             my %Notification = (
-                Subject     => $Param{Config}{New}{NoteSubject},
-                Body        => $Param{Config}{New}{NoteBody},
+                Subject     => $Param{Config}->{New}->{NoteSubject},
+                Body        => $Param{Config}->{New}->{NoteBody},
                 ContentType => 'text/plain',
             );
 
@@ -1041,9 +1041,9 @@ sub _JobRunTicket {
                 || IsHashRefWithData( $GenericAgentArticle{Subject} )
                 )
             {
-                $Param{Config}{New}{Note}{Subject} = $GenericAgentArticle{Subject} || '';
-                $Param{Config}{New}{Note}{Body}    = $GenericAgentArticle{Body}    || '';
-                $ContentType                       = $GenericAgentArticle{ContentType};
+                $Param{Config}->{New}->{Note}->{Subject} = $GenericAgentArticle{Subject} || '';
+                $Param{Config}->{New}->{Note}->{Body}    = $GenericAgentArticle{Body}    || '';
+                $ContentType                             = $GenericAgentArticle{ContentType};
             }
         }
 
@@ -1054,25 +1054,25 @@ sub _JobRunTicket {
         my $ArticleID = $ArticleBackendObject->ArticleCreate(
             TicketID             => $Param{TicketID},
             SenderType           => 'agent',
-            IsVisibleForCustomer => $Param{Config}{New}{Note}{IsVisibleForCustomer}
-                // $Param{Config}{New}{NoteIsVisibleForCustomer}
+            IsVisibleForCustomer => $Param{Config}->{New}->{Note}->{IsVisibleForCustomer}
+                // $Param{Config}->{New}->{NoteIsVisibleForCustomer}
                 // 0,
-            From => $Param{Config}{New}{Note}{From}
-                || $Param{Config}{New}{NoteFrom}
+            From => $Param{Config}->{New}->{Note}->{From}
+                || $Param{Config}->{New}->{NoteFrom}
                 || 'GenericAgent',
-            Subject => $Param{Config}{New}{Note}{Subject}
-                || $Param{Config}{New}{NoteSubject}
+            Subject => $Param{Config}->{New}->{Note}->{Subject}
+                || $Param{Config}->{New}->{NoteSubject}
                 || 'Note',
-            Body           => $Param{Config}{New}{Note}{Body} || $Param{Config}{New}{NoteBody},
+            Body           => $Param{Config}->{New}->{Note}->{Body} || $Param{Config}->{New}->{NoteBody},
             MimeType       => $ContentType,
             Charset        => 'utf-8',
             UserID         => $Param{UserID},
             HistoryType    => 'AddNote',
             HistoryComment => 'Generic Agent note added.',
-            NoAgentNotify  => $Param{Config}{New}{SendNoNotification} || 0,
+            NoAgentNotify  => $Param{Config}->{New}->{SendNoNotification} || 0,
         );
-        my $TimeUnits = $Param{Config}{New}{Note}{TimeUnits}
-            || $Param{Config}{New}{NoteTimeUnits};
+        my $TimeUnits = $Param{Config}->{New}->{Note}->{TimeUnits}
+            || $Param{Config}->{New}->{NoteTimeUnits};
         if ( $ArticleID && $TimeUnits ) {
             $TicketObject->TicketAccountTime(
                 TicketID  => $Param{TicketID},
@@ -1092,35 +1092,35 @@ sub _JobRunTicket {
 
     # set new state
     my $IsPendingState;
-    if ( $Param{Config}{New}{State} ) {
+    if ( $Param{Config}->{New}->{State} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - changed state of Ticket $Ticket to '$Param{Config}->{New}->{State}'\n";
         }
         $TicketObject->TicketStateSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            State    => $Param{Config}{New}{State},
+            State    => $Param{Config}->{New}->{State},
         );
 
-        $IsPendingState = grep { $_ eq $Param{Config}{New}{State} } values %{ $Self->{PendingStateList} };
+        $IsPendingState = grep { $_ eq $Param{Config}->{New}->{State} } values %{ $Self->{PendingStateList} };
     }
-    if ( $Param{Config}{New}{StateID} ) {
+    if ( $Param{Config}->{New}->{StateID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - changed state id of ticket $Ticket to '$Param{Config}->{New}->{StateID}'\n";
         }
         $TicketObject->TicketStateSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            StateID  => $Param{Config}{New}{StateID},
+            StateID  => $Param{Config}->{New}->{StateID},
         );
 
-        $IsPendingState = grep { $_ == $Param{Config}{New}{StateID} } keys %{ $Self->{PendingStateList} };
+        $IsPendingState = grep { $_ == $Param{Config}->{New}->{StateID} } keys %{ $Self->{PendingStateList} };
     }
 
     if (
-        $Param{Config}{New}{PendingTime}
-        && !$Param{Config}{New}{State}
-        && !$Param{Config}{New}{StateID}
+        $Param{Config}->{New}->{PendingTime}
+        && !$Param{Config}->{New}->{State}
+        && !$Param{Config}->{New}->{StateID}
         )
     {
         # if pending time is provided, but there is no new ticket state provided,
@@ -1134,14 +1134,14 @@ sub _JobRunTicket {
     }
 
     # set pending time, if new state is pending state
-    if ( $IsPendingState && $Param{Config}{New}{PendingTime} ) {
+    if ( $IsPendingState && $Param{Config}->{New}->{PendingTime} ) {
 
         # pending time
-        my $PendingTime = $Param{Config}{New}{PendingTime};
+        my $PendingTime = $Param{Config}->{New}->{PendingTime};
 
         # calculate pending time based on hours, minutes, years...
-        if ( $Param{Config}{New}{PendingTimeType} ) {
-            $PendingTime *= $Param{Config}{New}{PendingTimeType};
+        if ( $Param{Config}->{New}->{PendingTimeType} ) {
+            $PendingTime *= $Param{Config}->{New}->{PendingTimeType};
         }
 
         # add systemtime
@@ -1161,7 +1161,7 @@ sub _JobRunTicket {
     }
 
     # set customer id and customer user
-    if ( $Param{Config}{New}{CustomerID} || $Param{Config}{New}{CustomerUserLogin} ) {
+    if ( $Param{Config}->{New}->{CustomerID} || $Param{Config}->{New}->{CustomerUserLogin} ) {
 
         # If CustomerID or CustomerUserID is updated but not both in same call,
         # keep original values for non updated ones. See bug#14864 (https://bugs.otrs.org/show_bug.cgi?id=14864).
@@ -1170,20 +1170,20 @@ sub _JobRunTicket {
             DynamicFields => 0,
         );
 
-        if ( $Param{Config}{New}{CustomerID} ) {
+        if ( $Param{Config}->{New}->{CustomerID} ) {
             if ( $Self->{NoticeSTDOUT} ) {
                 print
                     "  - set customer id of Ticket $Ticket to '$Param{Config}->{New}->{CustomerID}'\n";
             }
         }
-        if ( $Param{Config}{New}{CustomerUserLogin} ) {
+        if ( $Param{Config}->{New}->{CustomerUserLogin} ) {
             if ( $Self->{NoticeSTDOUT} ) {
                 print
                     "  - set customer user id of Ticket $Ticket to '$Param{Config}->{New}->{CustomerUserLogin}'\n";
             }
         }
 
-        my $No = $Param{Config}{New}{CustomerID} || $Ticket{CustomerID} || '';
+        my $No = $Param{Config}->{New}->{CustomerID} || $Ticket{CustomerID} || '';
         $No = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
@@ -1191,7 +1191,7 @@ sub _JobRunTicket {
             Text       => $No,
             RichText   => 0,
         );
-        my $User = $Param{Config}{New}{CustomerUserLogin} || $Ticket{CustomerUserID} || '';
+        my $User = $Param{Config}->{New}->{CustomerUserLogin} || $Ticket{CustomerUserID} || '';
         $User = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
@@ -1208,7 +1208,7 @@ sub _JobRunTicket {
     }
 
     # set new title
-    if ( $Param{Config}{New}{Title} ) {
+    if ( $Param{Config}->{New}->{Title} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set title of Ticket $Ticket to '$Param{Config}->{New}->{Title}'\n";
         }
@@ -1218,99 +1218,99 @@ sub _JobRunTicket {
             DynamicFields => 1,
         );
 
-        $Param{Config}{New}{Title} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
+        $Param{Config}->{New}->{Title} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
             TicketData => \%Ticket,
-            Text       => $Param{Config}{New}{Title},
+            Text       => $Param{Config}->{New}->{Title},
             RichText   => 0,
         );
 
         $TicketObject->TicketTitleUpdate(
-            Title    => $Param{Config}{New}{Title},
+            Title    => $Param{Config}->{New}->{Title},
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
         );
     }
 
     # set new type
-    if ( $Param{Config}{New}{Type} ) {
+    if ( $Param{Config}->{New}->{Type} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set type of Ticket $Ticket to '$Param{Config}->{New}->{Type}'\n";
         }
         $TicketObject->TicketTypeSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            Type     => $Param{Config}{New}{Type},
+            Type     => $Param{Config}->{New}->{Type},
         );
     }
-    if ( $Param{Config}{New}{TypeID} ) {
+    if ( $Param{Config}->{New}->{TypeID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set type id of Ticket $Ticket to '$Param{Config}->{New}->{TypeID}'\n";
         }
         $TicketObject->TicketTypeSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            TypeID   => $Param{Config}{New}{TypeID},
+            TypeID   => $Param{Config}->{New}->{TypeID},
         );
     }
 
     # set new service
-    if ( $Param{Config}{New}{Service} ) {
+    if ( $Param{Config}->{New}->{Service} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set service of Ticket $Ticket to '$Param{Config}->{New}->{Service}'\n";
         }
         $TicketObject->TicketServiceSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            Service  => $Param{Config}{New}{Service},
+            Service  => $Param{Config}->{New}->{Service},
         );
     }
-    if ( $Param{Config}{New}{ServiceID} ) {
+    if ( $Param{Config}->{New}->{ServiceID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set service id of Ticket $Ticket to '$Param{Config}->{New}->{ServiceID}'\n";
         }
         $TicketObject->TicketServiceSet(
             TicketID  => $Param{TicketID},
             UserID    => $Param{UserID},
-            ServiceID => $Param{Config}{New}{ServiceID},
+            ServiceID => $Param{Config}->{New}->{ServiceID},
         );
     }
 
     # set new sla
-    if ( $Param{Config}{New}{SLA} ) {
+    if ( $Param{Config}->{New}->{SLA} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set sla of Ticket $Ticket to '$Param{Config}->{New}->{SLA}'\n";
         }
         $TicketObject->TicketSLASet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            SLA      => $Param{Config}{New}{SLA},
+            SLA      => $Param{Config}->{New}->{SLA},
         );
     }
-    if ( $Param{Config}{New}{SLAID} ) {
+    if ( $Param{Config}->{New}->{SLAID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set sla id of Ticket $Ticket to '$Param{Config}->{New}->{SLAID}'\n";
         }
         $TicketObject->TicketSLASet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            SLAID    => $Param{Config}{New}{SLAID},
+            SLAID    => $Param{Config}->{New}->{SLAID},
         );
     }
 
     # set new priority
-    if ( $Param{Config}{New}{Priority} ) {
+    if ( $Param{Config}->{New}->{Priority} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set priority of Ticket $Ticket to '$Param{Config}->{New}->{Priority}'\n";
         }
         $TicketObject->TicketPrioritySet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            Priority => $Param{Config}{New}{Priority},
+            Priority => $Param{Config}->{New}->{Priority},
         );
     }
-    if ( $Param{Config}{New}{PriorityID} ) {
+    if ( $Param{Config}->{New}->{PriorityID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print
                 "  - set priority id of Ticket $Ticket to '$Param{Config}->{New}->{PriorityID}'\n";
@@ -1318,34 +1318,34 @@ sub _JobRunTicket {
         $TicketObject->TicketPrioritySet(
             TicketID   => $Param{TicketID},
             UserID     => $Param{UserID},
-            PriorityID => $Param{Config}{New}{PriorityID},
+            PriorityID => $Param{Config}->{New}->{PriorityID},
         );
     }
 
     # set new owner
-    if ( $Param{Config}{New}{Owner} ) {
+    if ( $Param{Config}->{New}->{Owner} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set owner of Ticket $Ticket to '$Param{Config}->{New}->{Owner}'\n";
         }
         $TicketObject->TicketOwnerSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            NewUser  => $Param{Config}{New}{Owner},
+            NewUser  => $Param{Config}->{New}->{Owner},
         );
     }
-    if ( $Param{Config}{New}{OwnerID} ) {
+    if ( $Param{Config}->{New}->{OwnerID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set owner id of Ticket $Ticket to '$Param{Config}->{New}->{OwnerID}'\n";
         }
         $TicketObject->TicketOwnerSet(
             TicketID  => $Param{TicketID},
             UserID    => $Param{UserID},
-            NewUserID => $Param{Config}{New}{OwnerID},
+            NewUserID => $Param{Config}->{New}->{OwnerID},
         );
     }
 
     # set new responsible
-    if ( $Param{Config}{New}{Responsible} ) {
+    if ( $Param{Config}->{New}->{Responsible} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print
                 "  - set responsible of Ticket $Ticket to '$Param{Config}->{New}->{Responsible}'\n";
@@ -1353,10 +1353,10 @@ sub _JobRunTicket {
         $TicketObject->TicketResponsibleSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            NewUser  => $Param{Config}{New}{Responsible},
+            NewUser  => $Param{Config}->{New}->{Responsible},
         );
     }
-    if ( $Param{Config}{New}{ResponsibleID} ) {
+    if ( $Param{Config}->{New}->{ResponsibleID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print
                 "  - set responsible id of Ticket $Ticket to '$Param{Config}->{New}->{ResponsibleID}'\n";
@@ -1364,29 +1364,29 @@ sub _JobRunTicket {
         $TicketObject->TicketResponsibleSet(
             TicketID  => $Param{TicketID},
             UserID    => $Param{UserID},
-            NewUserID => $Param{Config}{New}{ResponsibleID},
+            NewUserID => $Param{Config}->{New}->{ResponsibleID},
         );
     }
 
     # set new lock
-    if ( $Param{Config}{New}{Lock} ) {
+    if ( $Param{Config}->{New}->{Lock} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set lock of Ticket $Ticket to '$Param{Config}->{New}->{Lock}'\n";
         }
         $TicketObject->TicketLockSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            Lock     => $Param{Config}{New}{Lock},
+            Lock     => $Param{Config}->{New}->{Lock},
         );
     }
-    if ( $Param{Config}{New}{LockID} ) {
+    if ( $Param{Config}->{New}->{LockID} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set lock id of Ticket $Ticket to '$Param{Config}->{New}->{LockID}'\n";
         }
         $TicketObject->TicketLockSet(
             TicketID => $Param{TicketID},
             UserID   => $Param{UserID},
-            LockID   => $Param{Config}{New}{LockID},
+            LockID   => $Param{Config}->{New}->{LockID},
         );
     }
 
@@ -1403,7 +1403,7 @@ sub _JobRunTicket {
         # extract the dynamic field value from the web request
         my $Value = $DynamicFieldBackendObject->EditFieldValueGet(
             DynamicFieldConfig => $DynamicFieldConfig,
-            Template           => $Param{Config}{New},
+            Template           => $Param{Config}->{New},
             TransformDates     => 0,
         );
 
@@ -1413,7 +1413,7 @@ sub _JobRunTicket {
         if (
             defined $Value
             && (
-                $DynamicFieldConfig->{Config}{PossibleNone}
+                $DynamicFieldConfig->{Config}->{PossibleNone}
                 || $Value ne ''
             )
             )
@@ -1463,7 +1463,7 @@ sub _JobRunTicket {
     # run module
     my $AllowCustomModuleExecution = $Kernel::OM->Get('Kernel::Config')->Get('Ticket::GenericAgentAllowCustomModuleExecution') || 0;
 
-    if ( $Param{Config}{New}{Module} && $AllowCustomModuleExecution ) {
+    if ( $Param{Config}->{New}->{Module} && $AllowCustomModuleExecution ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Use module ($Param{Config}->{New}->{Module}) for Ticket $Ticket.\n";
         }
@@ -1478,12 +1478,12 @@ sub _JobRunTicket {
             );
         }
 
-        if ( $Kernel::OM->Get('Kernel::System::Main')->Require( $Param{Config}{New}{Module} ) )
+        if ( $Kernel::OM->Get('Kernel::System::Main')->Require( $Param{Config}->{New}->{Module} ) )
         {
 
             # protect parent process
             eval {
-                my $Object = $Param{Config}{New}{Module}->new(
+                my $Object = $Param{Config}->{New}->{Module}->new(
                     Debug => $Self->{Debug},
                 );
                 if ($Object) {
@@ -1502,7 +1502,7 @@ sub _JobRunTicket {
             }
         }
     }
-    elsif ( $Param{Config}{New}{Module} && !$AllowCustomModuleExecution ) {
+    elsif ( $Param{Config}->{New}->{Module} && !$AllowCustomModuleExecution ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Use module ($Param{Config}->{New}->{Module}) is not allowed by the system configuration.\n";
         }
@@ -1514,7 +1514,7 @@ sub _JobRunTicket {
 
     # set new archive flag
     if (
-        $Param{Config}{New}{ArchiveFlag}
+        $Param{Config}->{New}->{ArchiveFlag}
         && $Kernel::OM->Get('Kernel::Config')->Get('Ticket::ArchiveSystem')
         )
     {
@@ -1525,14 +1525,14 @@ sub _JobRunTicket {
         $TicketObject->TicketArchiveFlagSet(
             TicketID    => $Param{TicketID},
             UserID      => $Param{UserID},
-            ArchiveFlag => $Param{Config}{New}{ArchiveFlag},
+            ArchiveFlag => $Param{Config}->{New}->{ArchiveFlag},
         );
     }
 
     # cmd
     my $AllowCustomScriptExecution = $Kernel::OM->Get('Kernel::Config')->Get('Ticket::GenericAgentAllowCustomScriptExecution') || 0;
 
-    if ( $Param{Config}{New}{CMD} && $AllowCustomScriptExecution ) {
+    if ( $Param{Config}->{New}->{CMD} && $AllowCustomScriptExecution ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Execute '$Param{Config}->{New}->{CMD}' for Ticket $Ticket.\n";
         }
@@ -1549,7 +1549,7 @@ sub _JobRunTicket {
             );
         }
     }
-    elsif ( $Param{Config}{New}{CMD} && !$AllowCustomScriptExecution ) {
+    elsif ( $Param{Config}->{New}->{CMD} && !$AllowCustomScriptExecution ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Execute '$Param{Config}->{New}->{CMD}' is not allowed by the system configuration..\n";
         }
@@ -1560,7 +1560,7 @@ sub _JobRunTicket {
     }
 
     # delete ticket
-    if ( $Param{Config}{New}{Delete} ) {
+    if ( $Param{Config}->{New}->{Delete} ) {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - Delete Ticket $Ticket.\n";
         }
