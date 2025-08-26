@@ -998,6 +998,7 @@ sub _JobRunTicket {
             RichText   => 0,
         );
 
+# Rother OSS / GenericAgent-NotificationTags
         $Param{Config}->{New}->{NoteSubject} = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
             Data       => {},
@@ -1013,7 +1014,7 @@ sub _JobRunTicket {
             Text       => $Param{Config}->{New}->{NoteFrom},
             RichText   => 0,
         );
-
+# EO GenericAgent-NotificationTags
         if ( IsHashRefWithData( \%Ticket ) ) {
 
             my %CustomerUserData = ();
@@ -1183,6 +1184,7 @@ sub _JobRunTicket {
             }
         }
 
+# Rother OSS / GenericAgent-NotificationTags
         my $No = $Param{Config}->{New}->{CustomerID} || $Ticket{CustomerID} || '';
         $No = $Kernel::OM->Get('Kernel::System::TemplateGenerator')->_Replace(
             UserID     => $Param{UserID},
@@ -1199,12 +1201,22 @@ sub _JobRunTicket {
             Text       => $User,
             RichText   => 0,
         );
+# EO GenericAgent-NotificationTags
+
+# Rother OSS / GenericAgent-NotificationTags
+#        $TicketObject->TicketCustomerSet(
+#            TicketID => $Param{TicketID},
+#            No       => $Param{Config}->{New}->{CustomerID}        || $Ticket{CustomerID}     || '',
+#            User     => $Param{Config}->{New}->{CustomerUserLogin} || $Ticket{CustomerUserID} || '',
+#            UserID   => $Param{UserID},
+#        );
         $TicketObject->TicketCustomerSet(
             TicketID => $Param{TicketID},
             No       => $No,
             User     => $User,
             UserID   => $Param{UserID},
         );
+# EO GenericAgent-NotificationTags
     }
 
     # set new title
@@ -1212,7 +1224,7 @@ sub _JobRunTicket {
         if ( $Self->{NoticeSTDOUT} ) {
             print "  - set title of Ticket $Ticket to '$Param{Config}->{New}->{Title}'\n";
         }
-
+# Rother OSS / GenericAgent-NotificationTags
         my %Ticket = $TicketObject->TicketGet(
             TicketID      => $Param{TicketID},
             DynamicFields => 1,
@@ -1225,7 +1237,7 @@ sub _JobRunTicket {
             Text       => $Param{Config}->{New}->{Title},
             RichText   => 0,
         );
-
+# EO GenericAgent-NotificationTags
         $TicketObject->TicketTitleUpdate(
             Title    => $Param{Config}->{New}->{Title},
             TicketID => $Param{TicketID},
@@ -1418,6 +1430,7 @@ sub _JobRunTicket {
             )
             )
         {
+# Rother OSS / GenericAgent-NotificationTags
             if ( $DynamicFieldConfig->{FieldType} =~ /^(Text|RichText|TextArea)$/ ) {
                 my %Ticket = $TicketObject->TicketGet(
                     TicketID      => $Param{TicketID},
@@ -1432,7 +1445,7 @@ sub _JobRunTicket {
                     RichText   => ( $DynamicFieldConfig->{FieldType} eq "Richtext" ? 1 : 0 ),
                 );
             }
-
+# EO GenericAgent-NotificationTags
             my $Success = $DynamicFieldBackendObject->ValueSet(
                 DynamicFieldConfig => $DynamicFieldConfig,
                 ObjectID           => $Param{TicketID},
