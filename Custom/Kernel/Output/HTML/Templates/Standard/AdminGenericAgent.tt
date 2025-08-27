@@ -970,6 +970,7 @@
                 </div>
             </div>
 [% END %]
+# Rother OSS / GenericAgent-NotificationTags
             <div class="WidgetSimple SpacingTop Collapsed">
                 <div class="Header">
                     <div class="WidgetAction Toggle">
@@ -980,47 +981,12 @@
 
                 <div class="Content">
 
-                    <p>[% Translate("Notifications are sent to an agent or a customer.") | html %]</p>
-
                     <p>[% Translate("You can use the following tags") | html %]:</p>
 
                     <dl>
-                        <dt><code>&lt;OTOBO_AGENT_SUBJECT[20]&gt;</code></dt>
-                        <dd>
-                            [% Translate("To get the first 20 character of the subject (of the latest agent article).") | html %]
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_AGENT_BODY[5]&gt;</code></dt>
-                        <dd>
-                            [% Translate("To get the first 5 lines of the body (of the latest agent article).") | html %]
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_AGENT_*&gt;</code></dt>
-                        <dd>
-                            [% Translate("To get the article attribute") | html %]
-                            ([% Translate(" e. g.") | html %] <code>&lt;OTOBO_AGENT_From&gt;, &lt;OTOBO_AGENT_To&gt;, &lt;OTOBO_AGENT_Cc&gt;</code>).
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_CUSTOMER_SUBJECT[20]&gt;</code></dt>
-                        <dd>
-                            [% Translate("To get the first 20 character of the subject (of the latest customer article).") | html %]
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_CUSTOMER_BODY[5]&gt;</code></dt>
-                        <dd>
-                            [% Translate("To get the first 5 lines of the body (of the latest customer article).") | html %]
-                        </dd>
-
                         <dt><code>&lt;OTOBO_CUSTOMER_REALNAME&gt;</code></dt>
                         <dd>
                             [% Translate("To get the name of the ticket's customer user (if given).") | html %]
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_CUSTOMER_*&gt;</code></dt>
-                        <dd>
-                            [% Translate("To get the article attribute") | html %]
-                            ([% Translate(" e. g.") | html %] <code>&lt;OTOBO_CUSTOMER_From&gt;, &lt;OTOBO_CUSTOMER_To&gt;,
-                            &lt;OTOBO_CUSTOMER_Cc&gt;</code>).
                         </dd>
 
                         <dt><code>&lt;OTOBO_CUSTOMER_DATA_*&gt;</code></dt>
@@ -1035,19 +1001,7 @@
                             ([% Translate(" e. g.") | html %] <code>&lt;OTOBO_OWNER_UserFirstname&gt;</code> [% Translate("or") | html %] <code>&lt;OTOBO_TICKET_OWNER_UserFirstname&gt;</code>).
                         </dd>
 
-                        <dt><code>&lt;OTOBO_RESPONSIBLE_*&gt;</code> [% Translate("or") | html %] <code>&lt;OTOBO_TICKET_RESPONSIBLE_*&gt;</code></dt>
-                        <dd>
-                            [% Translate("Attributes of the current ticket responsible user data") | html %]
-                            ([% Translate(" e. g.") | html %] <code>&lt;OTOBO_RESPONSIBLE_UserFirstname&gt;</code> [% Translate("or") | html %] <code>&lt;OTOBO_TICKET_RESPONSIBLE_UserFirstname&gt;</code>).
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_CURRENT_*&gt;</code></dt>
-                        <dd>
-                            [% Translate("Attributes of the current agent user who requested this action") | html %]
-                            ([% Translate(" e. g.") | html %] <code>&lt;OTOBO_CURRENT_UserFirstname&gt;</code>).
-                        </dd>
-
-                        <dt><code>&lt;OTOBO_*&gt;</code> [% Translate("or") | html %] <code>&lt;OTOBO_NOTIFICATION_RECIPIENT_*&gt;</code></dt>
+                        <dt><code>&lt;OTOBO_*&gt;</code></dt>
                         <dd>
                             [% Translate("Attributes of the recipient user for the notification") | html %]
                             ([% Translate(" e. g.") | html %] <code>&lt;OTOBO_UserFullname&gt;</code> [% Translate("or") | html %] <code>&lt;OTOBO_NOTIFICATION_RECIPIENT_UserFullname&gt;</code>).
@@ -1090,12 +1044,9 @@
                     <label for="ResponseExample">[% Translate("Text") | html %]</label>:
                     <br/>
                     <textarea rows="12" cols="70" name="ResponseExample" id="ResponseExample" readonly>
-    Hi &lt;OTOBO_NOTIFICATION_RECIPIENT_UserFirstname&gt;,
+    Hi &lt;OTOBO_OWNER_UserFirstname&gt;,
 
     ticket [&lt;OTOBO_CONFIG_TicketHook&gt;&lt;OTOBO_TICKET_TicketNumber&gt;] has been created in queue &lt;OTOBO_TICKET_Queue&gt;.
-
-    &lt;OTOBO_CUSTOMER_REALNAME&gt; wrote:
-    &lt;OTOBO_CUSTOMER_Body[30]&gt;
 
     &lt;OTOBO_CONFIG_HttpType&gt;://&lt;OTOBO_CONFIG_FQDN&gt;/&lt;OTOBO_CONFIG_ScriptAlias&gt;index.pl?Action=AgentTicketZoom;TicketID=&lt;OTOBO_TICKET_TicketID&gt;
 
@@ -1103,6 +1054,7 @@
                     </textarea>
                 </div>
             </div>
+# EO GenericAgent-NotificationTags
             <div class="WidgetSimple SpacingTop">
                 <div class="Header">
                     <h2>[% Translate("Save Changes") | html %]</h2>
