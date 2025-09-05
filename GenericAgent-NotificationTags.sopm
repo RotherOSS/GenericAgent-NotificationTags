@@ -10,6 +10,7 @@
     <Filelist>
         <File Permission="660" Location="Custom/Kernel/Output/HTML/Templates/Standard/AdminGenericAgent.tt" />
         <File Permission="660" Location="Custom/Kernel/System/GenericAgent.pm" />
+        <File Permission="660" Location="scripts/test/GenericAgentNotifTags.t" />
     </Filelist>
 </otobo_package>
 
