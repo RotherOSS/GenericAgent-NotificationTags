@@ -52,7 +52,7 @@ Accepted field tags:
 * **OTOBO_CUSTOMER_REALNAME** - To get the name of the ticket's customer user (if given).
 * **OTOBO_CUSTOMER_DATA_** - Attributes of the current customer user data (e.g. OTOBO_CUSTOMER_DATA_UserFirstname)
 * **OTOBO_OWNER_** or **OTOBO_TICKET_OWNER_** - Attributes of the current ticket owner user data (e.g. OTOBO_OWNER_UserFirstname, OTOBO_TICKET_OWNER_UserFirstname)
-* **OTOBO_** - Attributes of the recipient user for the notification (e.g. OTOBO_UserFullname&gt or OTOBO_NOTIFICATION_RECIPIENT_UserFullname)
+* **OTOBO_** - Attributes of the recipient user for the notification (e.g. OTOBO_UserFullname or OTOBO_NOTIFICATION_RECIPIENT_UserFullname)
 * **OTOBO_TICKET_** - Attributes of the ticket data (e.g. OTOBO_TICKET_TicketNumber, OTOBO_TICKET_TicketID, OTOBO_TICKET_Queue, OTOBO_TICKET_State)
 * **OTOBO_TICKET_DynamicField_** and **OTOBO_TICKET_DynamicField_\*_Value** - Ticket dynamic field data
 * **OTOBO_CONFIG_** - Config options (e.g. OTOBO_CONFIG_HttpType)
