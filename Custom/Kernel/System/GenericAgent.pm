@@ -4,7 +4,7 @@
 # Copyright (C) 2001-2020 OTRS AG, https://otrs.com/
 # Copyright (C) 2019-2026 Rother OSS GmbH, https://otobo.io/
 # --
-# $origin: otobo - aa9d5cbabec75ab5f2a3291602ce3ef38154fcc9 - Kernel/System/GenericAgent.pm
+# $origin: otobo - 4aa96b87ba8b5dfd160770d54350acbfc9b51c4a - Kernel/System/GenericAgent.pm
 # --
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -1143,6 +1143,10 @@ sub ExportGenericAgents {
 
 Imports new generic agents and optionally updates existing ones.
 
+The names written by L</ExportGenericAgents()>, e.g. C<States>, are translated to IDs, only the
+IDs are stored. A job with a name that does not exist on this system is not imported. The other
+jobs are imported anyway, but false is returned.
+
     my $Success = $GenericAgentObject->ImportGenericAgents(
         GenericAgents             => {
             'GenericAgentName01' => {
@@ -1175,6 +1179,28 @@ sub ImportGenericAgents {
 
     # fetch lookup lists
     my %GenericAgentList = $Self->JobList();
+
+    # attributes the export writes as names, with the attributes of the translated IDs
+    my %NameKey2IDKey = (
+        NewLock     => 'NewLockID',
+        NewOwner    => 'NewOwnerID',
+        NewPriority => 'NewPriorityID',
+        NewQueue    => 'NewQueueID',
+        NewService  => 'NewServiceID',
+        NewSLA      => 'NewSLAID',
+        NewState    => 'NewStateID',
+        NewType     => 'NewTypeID',
+        Locks       => 'LockIDs',
+        Owners      => 'OwnerIDs',
+        Priorities  => 'PriorityIDs',
+        Queues      => 'QueueIDs',
+        Services    => 'ServiceIDs',
+        SLAs        => 'SLAIDs',
+        States      => 'StateIDs',
+        Types       => 'TypeIDs',
+    );
+
+    my $AllJobsImported = 1;
 
     GENERICAGENTNAME:
     for my $GenericAgentName ( keys $Param{GenericAgents}->%* ) {
@@ -1304,6 +1330,38 @@ sub ImportGenericAgents {
             $GenericAgentData->{TypeIDs} = \@TypeIDs;
         }
 
+        # The names are only used to transfer the job between systems. Like a job of the admin
+        # interface, the job stores the IDs only. Remaining names would be used in addition to the
+        # IDs when the job runs, e.g. 'States' as search parameter of TicketSearch().
+        # A name that does not exist on this system is not translated. The job would run without
+        # this search condition or action then, so it is not imported.
+        NAMEKEY:
+        for my $NameKey ( sort keys %NameKey2IDKey ) {
+            my $Names = delete $GenericAgentData->{$NameKey};
+
+            # nothing to check if no name was given
+            next NAMEKEY if !$Names;
+            next NAMEKEY if ref $Names eq 'ARRAY' && !$Names->@*;
+
+            my @Names = ref $Names eq 'ARRAY' ? $Names->@* : ($Names);
+
+            my $IDs = $GenericAgentData->{ $NameKey2IDKey{$NameKey} };
+            my @IDs = ref $IDs eq 'ARRAY' ? $IDs->@* : ($IDs);
+
+            # the lookup of an unknown name returns undef or nothing at all
+            my @FoundIDs = grep {$_} @IDs;
+
+            next NAMEKEY if scalar @FoundIDs == scalar @Names;
+
+            $Kernel::OM->Get('Kernel::System::Log')->Log(
+                Priority => 'error',
+                Message  => "Generic agent job '$GenericAgentData->{Name}' is not imported, not every value of '$NameKey' exists on this system.",
+            );
+            $AllJobsImported = 0;
+
+            next GENERICAGENTNAME;
+        }
+
         # update
         if ($GenericAgentCheckName) {
 
@@ -1333,7 +1391,7 @@ sub ImportGenericAgents {
         }
     }
 
-    return 1;
+    return $AllJobsImported;
 }
 
 =begin Internal:
